@@ -469,3 +469,219 @@ class PenilaianGUI:
         except Exception as e:
             messagebox.showerror("Error", f"Terjadi kesalahan:\n{e}")
 
+
+        def pilih_matakuliah(self, event):
+        selection = self.tree_matakuliah.selection()
+        if not selection:
+            return
+        
+        item = selection[0]
+        values = self.tree_matakuliah.item(item, "values")
+        nama = values[0]
+        sks = int(values[1])
+        
+        mk_data = self.linked_list_mk.find_by_nama_sks(nama, sks)
+        
+        if mk_data:
+            self.selected_matkul_id = mk_data.get("id")
+            self.frame_nilai.pack(fill="x", pady=(10, 0))
+            self.entry_nama.delete(0, tk.END)
+            self.entry_nama.insert(0, nama)
+            self.combo_sks.set(str(sks))
+
+            persen = mk_data.get("persentase", {})
+            self.persen_uas.delete(0, tk.END)
+            self.persen_uas.insert(0, str(persen.get("persen_uas", 0)))
+            self.persen_uts.delete(0, tk.END)
+            self.persen_uts.insert(0, str(persen.get("persen_uts", 0)))
+            self.persen_quiz.delete(0, tk.END)
+            self.persen_quiz.insert(0, str(persen.get("persen_quiz", 0)))
+            self.persen_tugas.delete(0, tk.END)
+            self.persen_tugas.insert(0, str(persen.get("persen_tugas", 0)))
+            self.persen_absensi.delete(0, tk.END)
+            self.persen_absensi.insert(0, str(persen.get("persen_absensi", 0)))
+
+            p_responsi = persen.get("persen_responsi", 0)
+            if sks == 3 and p_responsi > 0:
+                self.label_responsi.grid(row=5, column=0, sticky="w")
+                self.entry_responsi.grid(row=5, column=1, pady=3)
+                self.entry_responsi.delete(0, tk.END)
+                self.entry_responsi.insert(0, str(p_responsi))
+            else:
+                self.label_responsi.grid_remove()
+                self.entry_responsi.grid_remove()
+
+            # reset inputan
+            self.nama_mhs.delete(0, tk.END)
+            self.nilai_uas.delete(0, tk.END)
+            self.nilai_uts.delete(0, tk.END)
+            self.nilai_quiz.delete(0, tk.END)
+            self.nilai_tugas.delete(0, tk.END)
+            self.nilai_absensi.delete(0, tk.END)
+            self.entry_responsi2.delete(0, tk.END)
+            self.label_responsi2.grid_remove()
+            self.entry_responsi2.grid_remove()
+            
+            # update tabel
+            self.update_tabel_nilai()
+    
+    def deselect_matakuliah(self, event):
+        self.selected_matkul_id = None
+        self.frame_nilai.pack_forget()
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+    
+    def update_tabel_nilai(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        # nampilin data yang idnya sama ama yang dipilih (left join)
+        if self.selected_matkul_id is not None:
+            for id_nilai, data in self.nilaidatabase.items():
+                if data.get("id_matakuliah") == self.selected_matkul_id:
+                    nama_mhs = data.get("nama_mhs", "")
+                    nilai_akhir = data.get("nilai_akhir", 0)
+                    huruf = data.get("nilai_mutu", "")
+                    self.tree.insert("", "end", values=(nama_mhs, round(nilai_akhir, 2), huruf))
+    
+    def hapus_matakuliah(self):
+        selection = self.tree_matakuliah.selection()
+        if not selection:
+            messagebox.showwarning("Peringatan", "Pilih mata kuliah yang ingin dihapus terlebih dahulu")
+            return
+        
+        item = selection[0]
+        values = self.tree_matakuliah.item(item, "values")
+        nama = values[0]
+        
+        if not messagebox.askyesno("Konfirmasi", f"Apakah Anda yakin ingin menghapus mata kuliah {nama}?"):
+            return
+        
+        self.tree_matakuliah.delete(item)
+        
+        sks = int(values[1])
+        mk_data = self.linked_list_mk.find_by_nama_sks(nama, sks)
+        id_mk_hapus = mk_data.get("id") if mk_data else None
+        
+        if id_mk_hapus: 
+            self.linked_list_mk.delete_by_id(id_mk_hapus)
+        
+        if self.selected_matkul_id == id_mk_hapus:
+            self.selected_matkul_id = None
+            self.frame_nilai.pack_forget()
+
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+        
+        history_msg = f"Hapus mata kuliah {nama}"
+        self.queue_history.enqueue(history_msg)
+        if mk_data:
+            self.stack_undo.push({"action": "hapus", "data": mk_data})
+        
+        messagebox.showinfo("Sukses", f"Mata kuliah {nama} berhasil dihapus")
+        
+        self.entry_nama.delete(0, tk.END)
+        self.combo_sks.set("")
+        self.persen_uas.delete(0, tk.END)
+        self.persen_uts.delete(0, tk.END)
+        self.persen_quiz.delete(0, tk.END)
+        self.persen_tugas.delete(0, tk.END)
+        self.persen_absensi.delete(0, tk.END)
+        self.entry_responsi.delete(0, tk.END)
+        self.nama_mhs.delete(0, tk.END)
+        self.nilai_uas.delete(0, tk.END)
+        self.nilai_uts.delete(0, tk.END)
+        self.nilai_quiz.delete(0, tk.END)
+        self.nilai_tugas.delete(0, tk.END)
+        self.nilai_absensi.delete(0, tk.END)
+        self.entry_responsi2.delete(0, tk.END)
+        self.label_responsi.grid_remove()
+        self.entry_responsi.grid_remove()
+        self.label_responsi2.grid_remove()
+        self.entry_responsi2.grid_remove()
+
+    def undo_action(self):
+        if self.stack_undo.is_empty():
+            messagebox.showinfo("Info", "Tidak ada operasi yang bisa di-undo")
+            return
+        
+        last_action = self.stack_undo.pop()
+        action_type = last_action.get("action")
+        
+        try:
+            if action_type == "tambah":
+                data_mk = last_action.get("data")
+                id_mk = last_action.get("id")
+                
+                if self.linked_list_mk.delete_by_id(id_mk):
+                    # Hapus matkuknya
+                    for item in self.tree_matakuliah.get_children():
+                        values = self.tree_matakuliah.item(item, "values")
+                        if values[0] == data_mk.get("nama") and int(values[1]) == data_mk.get("sks"):
+                            self.tree_matakuliah.delete(item)
+                            break
+                    
+                    messagebox.showinfo("Undo", f"Mata kuliah {data_mk.get('nama')} telah dihapus (undo)")
+            
+            elif action_type == "hapus":
+                # undo hapus 
+                data_mk = last_action.get("data")
+
+                self.linked_list_mk.append(data_mk)
+                
+                # tambah kembali matkulnya
+                nama = data_mk.get("nama")
+                sks = data_mk.get("sks")
+                persen = data_mk.get("persentase", {})
+                persentase_str = f"UAS:{persen.get('persen_uas', 0)}%, UTS:{persen.get('persen_uts', 0)}%, Quiz:{persen.get('persen_quiz', 0)}%, Tugas:{persen.get('persen_tugas', 0)}%, Absen:{persen.get('persen_absensi', 0)}%"
+                if sks == 3:
+                    persentase_str += f", Responsi:{persen.get('persen_responsi', 0)}%"
+                
+                self.tree_matakuliah.insert("", "end", values=(nama, sks, persentase_str), tags=(nama,))
+                
+                messagebox.showinfo("Undo", f"Mata kuliah {nama} telah dikembalikan (undo)")
+            
+            elif action_type == "hitung":
+                # undo hitung nilai
+                data_nilai = last_action.get("data")
+                id_matakuliah = data_nilai.get("id_matakuliah")
+                
+                # cari dan hapus dari nilaidatabase
+                for id_nilai, nilai_data in list(self.nilaidatabase.items()):
+                    if (nilai_data.get("id_matakuliah") == id_matakuliah and 
+                        nilai_data.get("nama_mhs") == data_nilai.get("nama_mhs")):
+                        del self.nilaidatabase[id_nilai]
+                        break
+                
+                # update tabel nilai
+                self.update_tabel_nilai()
+                
+                messagebox.showinfo("Undo", f"Nilai untuk {data_nilai.get('nama_mhs')} telah dihapus (undo)")
+            
+            # hapus juga dari queue history
+            if not self.queue_history.is_empty():
+                self.queue_history.dequeue()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Gagal melakukan undo:\n{e}")
+
+    def show_history(self):
+        window = tk.Toplevel()
+        window.title("History Operasi")
+        window.geometry("400x300")
+
+        text = tk.Text(window, wrap="word")
+        text.pack(fill="both", expand=True)
+
+        # liat histori
+        history_items = self.queue_history.display()
+        for item in history_items:
+            text.insert("end", "• " + item + "\n")
+
+
+root = tk.Tk()
+app = PenilaianGUI(root)
+root.mainloop()
+
+
+
