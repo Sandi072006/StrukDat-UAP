@@ -253,100 +253,100 @@ class PenilaianGUI:
         tk.Button(root, text="Lihat History", command=self.show_history).pack(pady=5)
 
     def _buat_entry(self, parent, label, row):
-        tk.Label(parent, text=label).grid(row=row, column=0, sticky="w")
-        entry = tk.Entry(parent, width=10)
-        entry.grid(row=row, column=1, pady=3)
-        return entry
-    
- def tambah_matakuliah(self):
-        try:
-            nama = self.entry_nama.get().strip()
-            sks_str = self.combo_sks.get().strip()
-            
-            if not nama:
-                messagebox.showerror("Error", "Nama mata kuliah harus diisi")
-                return
-            
-            if not sks_str:
-                messagebox.showerror("Error", "Jumlah SKS harus dipilih")
-                return
-                
-            sks = int(sks_str)
-            
-            # validasi nilai wok
-            try:
-                p_uas = float(self.persen_uas.get() or 0)
-                p_uts = float(self.persen_uts.get() or 0)
-                p_quiz = float(self.persen_quiz.get() or 0)
-                p_tugas = float(self.persen_tugas.get() or 0)
-                p_absen = float(self.persen_absensi.get() or 0)
-                
-                total = p_uas + p_uts + p_quiz + p_tugas + p_absen
-                
-                p_responsi = 0
-                if sks == 3:
-                    # kalau 3 tambah responsi
-                    self.label_responsi.grid(row=5, column=0, sticky="w")
-                    self.entry_responsi.grid(row=5, column=1, pady=3)
+            tk.Label(parent, text=label).grid(row=row, column=0, sticky="w")
+            entry = tk.Entry(parent, width=10)
+            entry.grid(row=row, column=1, pady=3)
+            return entry
+        
+    def tambah_matakuliah(self):
+                try:
+                    nama = self.entry_nama.get().strip()
+                    sks_str = self.combo_sks.get().strip()
                     
-                    p_responsi = float(self.entry_responsi.get() or 0)
-                    total += p_responsi
-                else:
-                    self.label_responsi.grid_remove()
-                    self.entry_responsi.grid_remove()
-                
-                if total != 100:
-                    messagebox.showerror("Error", f"Total persentase HARUS 100% (Saat ini: {total}%)")
-                    return
-                
-            except ValueError:
-                messagebox.showerror("Error", "Persentase komponen harus berupa angka")
-                return
-
-            persentase_dict = {
-                "persen_uas": p_uas,
-                "persen_uts": p_uts,
-                "persen_quiz": p_quiz,
-                "persen_tugas": p_tugas,
-                "persen_absensi": p_absen,
-                "persen_responsi": p_responsi
-            }
-            
-
-            persentase_str = f"UAS:{p_uas}%, UTS:{p_uts}%, Quiz:{p_quiz}%, Tugas:{p_tugas}%, Absen:{p_absen}%"
-            if sks == 3:
-                persentase_str += f", Responsi:{p_responsi}%"
-            
-            #auto increment saja
-            if self.linked_list_mk.size > 0:
-                max_id_mk = self.linked_list_mk.get_max_id()
-                id_mk = max_id_mk + 1
-            else:
-                id_mk = 1
-
-            data_mk = {
-                "id": id_mk,
-                "nama": nama,
-                "sks": sks, 
-                "persentase": persentase_dict
-            }
-            self.linked_list_mk.append(data_mk)
-            
-
-            item_id = self.tree_matakuliah.insert("", "end", values=(nama, sks, persentase_str), tags=(nama,))
-            
-            history_msg = f"Tambah mata kuliah {nama} (SKS: {sks})"
-            self.queue_history.enqueue(history_msg)
-            self.stack_undo.push({"action": "tambah", "data": data_mk, "id": id_mk})
-            
-            messagebox.showinfo("Sukses", f"Mata kuliah {nama} berhasil ditambahkan")
-            self.entry_nama.delete(0, tk.END)
-            self.combo_sks.set("")  
-            self.entry_nama.focus()
-        except ValueError:
-            messagebox.showerror("Error", "SKS harus berupa angka (2 atau 3)")
-        except Exception as e:
-            messagebox.showerror("Error", f"Terjadi kesalahan:\n{e}")
+                    if not nama:
+                        messagebox.showerror("Error", "Nama mata kuliah harus diisi")
+                        return
+                    
+                    if not sks_str:
+                        messagebox.showerror("Error", "Jumlah SKS harus dipilih")
+                        return
+                        
+                    sks = int(sks_str)
+                    
+                    # validasi nilai wok
+                    try:
+                        p_uas = float(self.persen_uas.get() or 0)
+                        p_uts = float(self.persen_uts.get() or 0)
+                        p_quiz = float(self.persen_quiz.get() or 0)
+                        p_tugas = float(self.persen_tugas.get() or 0)
+                        p_absen = float(self.persen_absensi.get() or 0)
+                        
+                        total = p_uas + p_uts + p_quiz + p_tugas + p_absen
+                        
+                        p_responsi = 0
+                        if sks == 3:
+                            # kalau 3 tambah responsi
+                            self.label_responsi.grid(row=5, column=0, sticky="w")
+                            self.entry_responsi.grid(row=5, column=1, pady=3)
+                            
+                            p_responsi = float(self.entry_responsi.get() or 0)
+                            total += p_responsi
+                        else:
+                            self.label_responsi.grid_remove()
+                            self.entry_responsi.grid_remove()
+                        
+                        if total != 100:
+                            messagebox.showerror("Error", f"Total persentase HARUS 100% (Saat ini: {total}%)")
+                            return
+                        
+                    except ValueError:
+                        messagebox.showerror("Error", "Persentase komponen harus berupa angka")
+                        return
+        
+                    persentase_dict = {
+                        "persen_uas": p_uas,
+                        "persen_uts": p_uts,
+                        "persen_quiz": p_quiz,
+                        "persen_tugas": p_tugas,
+                        "persen_absensi": p_absen,
+                        "persen_responsi": p_responsi
+                    }
+                    
+        
+                    persentase_str = f"UAS:{p_uas}%, UTS:{p_uts}%, Quiz:{p_quiz}%, Tugas:{p_tugas}%, Absen:{p_absen}%"
+                    if sks == 3:
+                        persentase_str += f", Responsi:{p_responsi}%"
+                    
+                    #auto increment saja
+                    if self.linked_list_mk.size > 0:
+                        max_id_mk = self.linked_list_mk.get_max_id()
+                        id_mk = max_id_mk + 1
+                    else:
+                        id_mk = 1
+        
+                    data_mk = {
+                        "id": id_mk,
+                        "nama": nama,
+                        "sks": sks, 
+                        "persentase": persentase_dict
+                    }
+                    self.linked_list_mk.append(data_mk)
+                    
+        
+                    item_id = self.tree_matakuliah.insert("", "end", values=(nama, sks, persentase_str), tags=(nama,))
+                    
+                    history_msg = f"Tambah mata kuliah {nama} (SKS: {sks})"
+                    self.queue_history.enqueue(history_msg)
+                    self.stack_undo.push({"action": "tambah", "data": data_mk, "id": id_mk})
+                    
+                    messagebox.showinfo("Sukses", f"Mata kuliah {nama} berhasil ditambahkan")
+                    self.entry_nama.delete(0, tk.END)
+                    self.combo_sks.set("")  
+                    self.entry_nama.focus()
+                except ValueError:
+                    messagebox.showerror("Error", "SKS harus berupa angka (2 atau 3)")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Terjadi kesalahan:\n{e}")
 
     def proses_hitung(self):
         try:
@@ -470,61 +470,61 @@ class PenilaianGUI:
             messagebox.showerror("Error", f"Terjadi kesalahan:\n{e}")
 
 
-        def pilih_matakuliah(self, event):
-        selection = self.tree_matakuliah.selection()
-        if not selection:
-            return
-        
-        item = selection[0]
-        values = self.tree_matakuliah.item(item, "values")
-        nama = values[0]
-        sks = int(values[1])
-        
-        mk_data = self.linked_list_mk.find_by_nama_sks(nama, sks)
-        
-        if mk_data:
-            self.selected_matkul_id = mk_data.get("id")
-            self.frame_nilai.pack(fill="x", pady=(10, 0))
-            self.entry_nama.delete(0, tk.END)
-            self.entry_nama.insert(0, nama)
-            self.combo_sks.set(str(sks))
-
-            persen = mk_data.get("persentase", {})
-            self.persen_uas.delete(0, tk.END)
-            self.persen_uas.insert(0, str(persen.get("persen_uas", 0)))
-            self.persen_uts.delete(0, tk.END)
-            self.persen_uts.insert(0, str(persen.get("persen_uts", 0)))
-            self.persen_quiz.delete(0, tk.END)
-            self.persen_quiz.insert(0, str(persen.get("persen_quiz", 0)))
-            self.persen_tugas.delete(0, tk.END)
-            self.persen_tugas.insert(0, str(persen.get("persen_tugas", 0)))
-            self.persen_absensi.delete(0, tk.END)
-            self.persen_absensi.insert(0, str(persen.get("persen_absensi", 0)))
-
-            p_responsi = persen.get("persen_responsi", 0)
-            if sks == 3 and p_responsi > 0:
-                self.label_responsi.grid(row=5, column=0, sticky="w")
-                self.entry_responsi.grid(row=5, column=1, pady=3)
-                self.entry_responsi.delete(0, tk.END)
-                self.entry_responsi.insert(0, str(p_responsi))
-            else:
-                self.label_responsi.grid_remove()
-                self.entry_responsi.grid_remove()
-
-            # reset inputan
-            self.nama_mhs.delete(0, tk.END)
-            self.nilai_uas.delete(0, tk.END)
-            self.nilai_uts.delete(0, tk.END)
-            self.nilai_quiz.delete(0, tk.END)
-            self.nilai_tugas.delete(0, tk.END)
-            self.nilai_absensi.delete(0, tk.END)
-            self.entry_responsi2.delete(0, tk.END)
-            self.label_responsi2.grid_remove()
-            self.entry_responsi2.grid_remove()
+    def pilih_matakuliah(self, event):
+            selection = self.tree_matakuliah.selection()
+            if not selection:
+                return
             
-            # update tabel
-            self.update_tabel_nilai()
+            item = selection[0]
+            values = self.tree_matakuliah.item(item, "values")
+            nama = values[0]
+            sks = int(values[1])
+            
+            mk_data = self.linked_list_mk.find_by_nama_sks(nama, sks)
+            
+            if mk_data:
+                self.selected_matkul_id = mk_data.get("id")
+                self.frame_nilai.pack(fill="x", pady=(10, 0))
+                self.entry_nama.delete(0, tk.END)
+                self.entry_nama.insert(0, nama)
+                self.combo_sks.set(str(sks))
     
+                persen = mk_data.get("persentase", {})
+                self.persen_uas.delete(0, tk.END)
+                self.persen_uas.insert(0, str(persen.get("persen_uas", 0)))
+                self.persen_uts.delete(0, tk.END)
+                self.persen_uts.insert(0, str(persen.get("persen_uts", 0)))
+                self.persen_quiz.delete(0, tk.END)
+                self.persen_quiz.insert(0, str(persen.get("persen_quiz", 0)))
+                self.persen_tugas.delete(0, tk.END)
+                self.persen_tugas.insert(0, str(persen.get("persen_tugas", 0)))
+                self.persen_absensi.delete(0, tk.END)
+                self.persen_absensi.insert(0, str(persen.get("persen_absensi", 0)))
+    
+                p_responsi = persen.get("persen_responsi", 0)
+                if sks == 3 and p_responsi > 0:
+                    self.label_responsi.grid(row=5, column=0, sticky="w")
+                    self.entry_responsi.grid(row=5, column=1, pady=3)
+                    self.entry_responsi.delete(0, tk.END)
+                    self.entry_responsi.insert(0, str(p_responsi))
+                else:
+                    self.label_responsi.grid_remove()
+                    self.entry_responsi.grid_remove()
+    
+                # reset inputan
+                self.nama_mhs.delete(0, tk.END)
+                self.nilai_uas.delete(0, tk.END)
+                self.nilai_uts.delete(0, tk.END)
+                self.nilai_quiz.delete(0, tk.END)
+                self.nilai_tugas.delete(0, tk.END)
+                self.nilai_absensi.delete(0, tk.END)
+                self.entry_responsi2.delete(0, tk.END)
+                self.label_responsi2.grid_remove()
+                self.entry_responsi2.grid_remove()
+                
+                # update tabel
+                self.update_tabel_nilai()
+        
     def deselect_matakuliah(self, event):
         self.selected_matkul_id = None
         self.frame_nilai.pack_forget()
@@ -682,6 +682,7 @@ class PenilaianGUI:
 root = tk.Tk()
 app = PenilaianGUI(root)
 root.mainloop()
+
 
 
 
